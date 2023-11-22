@@ -1,14 +1,30 @@
 "use client";
 import { useCompletedTasks } from "@/store/CompletedTasksContext";
-import { useState } from "react";
+import connect from "@/utils/db";
+import { useState, useEffect } from "react";
 
 const Todo = () => {
   const [todos, setTodos] = useState([]);
   const [newTodo, setNewTodo] = useState("");
   const { completedTasks, addCompletedTask } = useCompletedTasks();
 
-  const addTodo = () => {
+  useEffect(() => {
+    const fetchData = async () => {
+      const db = await connect();
+      const collection = db.collection("Task");
+      const result = await collection.find({}).toArray();
+      setTodos(result);
+    };
+
+    fetchData();
+  }, []);
+
+  const addTodo = async () => {
     if (newTodo.trim() !== "") {
+      const db = await connect();
+      const collection = db.collection("Task");
+      await collection.insertOne({ text: newTodo, completed: false });
+
       setTodos([...todos, { text: newTodo, completed: false }]);
       setNewTodo("");
     }
